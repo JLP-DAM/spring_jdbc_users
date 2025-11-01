@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 
 import com.ra2.users.ra2_users.model.User;
@@ -36,11 +37,41 @@ public class UserRepository {
         }
     }
 
-    public void insertUser(User user) {
+    // Insertem un usuari a partir d'una instancia de l'objecte
+    public void insertUser(User user) {        
         jdbcTemplate.update("insert into users (name, description, email, password, ultimAcces, dataCreated, dataUpdated) values (?, ?, ?, ?, ?, ?, ?)", user.getName(), user.getDescription(), user.getEmail(), user.getPassword(), user.getUltimAcces(), user.getDataCreated(), user.getDataUpdated());
     }
 
+    // Llegim tots els usuaris a la taula
     public List<User> getAllUsers() {
-        return jdbcTemplate.query("select id, name, description, email, password, ultimAcces, dataCreated, dataUpdated from users", new UserRowMapper());
+        jdbcTemplate.update("update users set ultimAcces = ?", (new Timestamp(System.currentTimeMillis())));
+        
+        return jdbcTemplate.query("select * from users", new UserRowMapper());
+    }
+
+    // Trobem a un usuari per la seva Id
+    public User getUser(long userId) {
+        jdbcTemplate.update(String.format("update users set ultimAcces = ? where id = %s", userId), (new Timestamp(System.currentTimeMillis())));
+        List<User> users = jdbcTemplate.query(String.format("select * from users where id = %s", userId), new UserRowMapper());
+
+        return users.size() <= 0 ? null : users.get(0);
+    }
+
+    // Actualitzem a un usuari de forma completa per la seva Id
+    public void updateUser(long userId, User user) {
+        user.setId(userId);
+        user.setDataUpdated(new Timestamp(System.currentTimeMillis()));
+        jdbcTemplate.update(String.format("update users set name = ?, description = ?, email = ?, password = ?, ultimAcces = ?, dataCreated = ?, dataUpdated = ? where id = %s", user.getId()), user.getName(), user.getDescription(), user.getEmail(), user.getPassword(), user.getUltimAcces(), user.getDataCreated(), user.getDataUpdated());
+    }
+
+    // Actualitzem el nom d'un usuari per la seva Id
+    public void updateUserName(long userId, String name) {
+        jdbcTemplate.update(String.format("update users set dataUpdated = ? where id = %s", userId), (new Timestamp(System.currentTimeMillis())));
+        jdbcTemplate.update(String.format("update users set name = ?, dataUpdated = ? where id = %s", userId), name, (new Timestamp(System.currentTimeMillis())));
+    }
+
+    // Borrem un usuari per la seva Id
+    public void deleteUser(long userId) {
+        jdbcTemplate.execute(String.format("delete from users where id = %s", userId));
     }
 }
