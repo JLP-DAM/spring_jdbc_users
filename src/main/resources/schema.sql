@@ -8,5 +8,6 @@ create table users (
     password varchar(100) not null,
     ultimAcces timestamp,
     dataCreated timestamp,
-    dataUpdated timestamp
+    dataUpdated timestamp,
+    image_path VARCHAR(500) null
 );

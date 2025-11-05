@@ -32,6 +32,7 @@ public class UserRepository {
             user.setUltimAcces(resultSet.getTimestamp("ultimAcces"));
             user.setDataCreated(resultSet.getTimestamp("dataCreated"));
             user.setDataUpdated(resultSet.getTimestamp("dataUpdated"));
+            //user.setImageFile(resultSet.getString("imageFile"));            
 
             return user;
         }
