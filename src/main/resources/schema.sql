@@ -9,5 +9,5 @@ create table users (
     ultimAcces timestamp,
     dataCreated timestamp,
     dataUpdated timestamp,
-    image_path VARCHAR(500) null
+    imagePath VARCHAR(500) null
 );

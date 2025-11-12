@@ -2,8 +2,6 @@ package com.ra2.users.ra2_users.model;
 
 import java.sql.Timestamp;
 
-import org.springframework.web.multipart.MultipartFile;
-
 // Classe per representar les dades d'un usuari
 // Té setters i getters per cada propietat
 public class User {
@@ -15,7 +13,7 @@ public class User {
     Timestamp ultimAcces;
     Timestamp dataCreated;
     Timestamp dataUpdated;
-    MultipartFile imageFile;
+    String imagePath;
 
     public long getId() {
         return id;
@@ -89,18 +87,18 @@ public class User {
     }
     
     
-    public MultipartFile getImageFile() {
-        return imageFile;
+    public String getImagePath() {
+        return imagePath;
     }
     
-    public void setImageFile(MultipartFile imageFile) {
-        this.imageFile = imageFile;
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 
     @Override
     public String toString() {
         return "User [id=" + id + ", name=" + name + ", description=" + description + ", email=" + email + ", password="
                 + password + ", ultimAcces=" + ultimAcces + ", dataCreated=" + dataCreated + ", dataUpdated="
-                + dataUpdated + "]";
+                + dataUpdated + ", imagePath=" + imagePath + "]";
     }
 }

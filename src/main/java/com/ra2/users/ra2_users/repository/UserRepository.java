@@ -32,7 +32,7 @@ public class UserRepository {
             user.setUltimAcces(resultSet.getTimestamp("ultimAcces"));
             user.setDataCreated(resultSet.getTimestamp("dataCreated"));
             user.setDataUpdated(resultSet.getTimestamp("dataUpdated"));
-            //user.setImageFile(resultSet.getString("imageFile"));            
+            user.setImagePath(resultSet.getString("imagePath"));            
 
             return user;
         }
@@ -40,7 +40,7 @@ public class UserRepository {
 
     // Insertem un usuari a partir d'una instancia de l'objecte
     public void insertUser(User user) {        
-        jdbcTemplate.update("insert into users (name, description, email, password, ultimAcces, dataCreated, dataUpdated) values (?, ?, ?, ?, ?, ?, ?)", user.getName(), user.getDescription(), user.getEmail(), user.getPassword(), user.getUltimAcces(), user.getDataCreated(), user.getDataUpdated());
+        jdbcTemplate.update("insert into users (name, description, email, password, ultimAcces, dataCreated, dataUpdated, imagePath) values (?, ?, ?, ?, ?, ?, ?, ?)", user.getName(), user.getDescription(), user.getEmail(), user.getPassword(), user.getUltimAcces(), user.getDataCreated(), user.getDataUpdated(), user.getImagePath());
     }
 
     // Llegim tots els usuaris a la taula
@@ -62,7 +62,7 @@ public class UserRepository {
     public void updateUser(long userId, User user) {
         user.setId(userId);
         user.setDataUpdated(new Timestamp(System.currentTimeMillis()));
-        jdbcTemplate.update(String.format("update users set name = ?, description = ?, email = ?, password = ?, ultimAcces = ?, dataCreated = ?, dataUpdated = ? where id = %s", user.getId()), user.getName(), user.getDescription(), user.getEmail(), user.getPassword(), user.getUltimAcces(), user.getDataCreated(), user.getDataUpdated());
+        jdbcTemplate.update(String.format("update users set name = ?, description = ?, email = ?, password = ?, ultimAcces = ?, dataCreated = ?, dataUpdated = ?, imagePath = ? where id = %s", user.getId()), user.getName(), user.getDescription(), user.getEmail(), user.getPassword(), user.getUltimAcces(), user.getDataCreated(), user.getDataUpdated(), user.getImagePath());
     }
 
     // Actualitzem el nom d'un usuari per la seva Id

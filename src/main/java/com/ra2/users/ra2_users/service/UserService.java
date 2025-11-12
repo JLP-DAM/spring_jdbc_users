@@ -1,5 +1,8 @@
 package com.ra2.users.ra2_users.service;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -82,7 +85,7 @@ public class UserService {
     }
 
     // Borrem un usuari a través de la seva user id
-    public ResponseEntity<String> uploadImage(long user_id, MultipartFile imageFile) {
+    public ResponseEntity<String> uploadImage(long user_id, MultipartFile imageFile) throws Exception {
         User user = userRepository.getUser(user_id);
 
         System.out.println(imageFile);
@@ -90,15 +93,29 @@ public class UserService {
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No s'ha pogut trobar l'usuari amb la id: \"" + user_id + "\".");
         }
-
-        user.setImageFile(imageFile);
+        
+        String imagePath = null;
 
         if (imageFile != null) {
-            
+            File imageFolder = new File("src/main/resources/public/images");
+
+            if (!imageFolder.exists()) {
+                imageFolder.mkdirs();
+            }
+
+            imagePath = "src/main/resources/public/images/" + user.getId() + ".png";
+
+            File image = new File("src/main/resources/public/images/" + user.getId() + ".png");
+
+            try (OutputStream outputStream = new FileOutputStream(image)) {
+                outputStream.write(imageFile.getBytes());
+            }
         }
+
+        user.setImagePath(imagePath);
 
         updateUser(user_id, user);
 
-        return ResponseEntity.status(HttpStatus.OK).body("S'ha pujat la foto de l'usuari amb id: " + user_id);
+        return ResponseEntity.status(HttpStatus.OK).body("S'ha pujat la foto de l'usuari amb id: " + user_id + " al path: " + imagePath);
     }
 }

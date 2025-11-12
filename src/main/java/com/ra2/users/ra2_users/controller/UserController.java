@@ -63,7 +63,7 @@ public class UserController {
 
     // Endpoint per pujar una foto per un usuari
     @PostMapping("/users/{user_id}/image")
-    public ResponseEntity<String> uploadImage(@PathVariable long user_id, @RequestParam MultipartFile imageFile) {
+    public ResponseEntity<String> uploadImage(@PathVariable long user_id, @RequestParam MultipartFile imageFile) throws Exception {
         return userService.uploadImage(user_id, imageFile);
     }
 }
