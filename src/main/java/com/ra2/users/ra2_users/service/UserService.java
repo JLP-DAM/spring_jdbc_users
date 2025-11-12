@@ -1,15 +1,23 @@
 package com.ra2.users.ra2_users.service;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.OutputStream;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import javax.xml.crypto.dsig.spec.ExcC14NParameterSpec;
+
+import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.ra2.users.ra2_users.model.User;
@@ -30,8 +38,9 @@ public class UserService {
 
         try {
             userRepository.insertUser(user);
-        } catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha pogut crear l'Usuari: \"" + user + "\", error: " + exception.getLocalizedMessage());
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No s'ha pogut crear l'Usuari: \"" + user + "\", error: " + exception.getLocalizedMessage());
         }
 
         return ResponseEntity.status(HttpStatus.OK).body("Afegit l'usuari " + user);
@@ -41,22 +50,26 @@ public class UserService {
     public ResponseEntity<String> getAllUsers() {
         List<User> users = userRepository.getAllUsers();
 
-        return ResponseEntity.status(users.size() <= 0 ? HttpStatus.NOT_FOUND : HttpStatus.FOUND).body(users.size() <= 0 ? "No s'ha trobat cap usuari" : "Usuaris trobats: " + users);
+        return ResponseEntity.status(users.size() <= 0 ? HttpStatus.NOT_FOUND : HttpStatus.FOUND)
+                .body(users.size() <= 0 ? "No s'ha trobat cap usuari" : "Usuaris trobats: " + users);
     }
 
     // Obten un usuari a partir de la seva user id
     public ResponseEntity<String> getUser(long user_id) {
         User user = userRepository.getUser(user_id);
 
-        return ResponseEntity.status(user == null ? HttpStatus.NOT_FOUND : HttpStatus.FOUND).body(user == null ? "No s'ha trobat cap usuari" : "Usuari trobat: " + user);
+        return ResponseEntity.status(user == null ? HttpStatus.NOT_FOUND : HttpStatus.FOUND)
+                .body(user == null ? "No s'ha trobat cap usuari" : "Usuari trobat: " + user);
     }
 
-    // Actualitzem (mes be sobreescribim) un usuari de forma completa a través de la seva user id
+    // Actualitzem (mes be sobreescribim) un usuari de forma completa a través de la
+    // seva user id
     public ResponseEntity<String> updateUser(long user_id, User user) {
         try {
             userRepository.updateUser(user_id, user);
-        } catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha pogut actualitzar l'Usuari: \"" + user + "\", error: " + exception.getLocalizedMessage());
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                    "No s'ha pogut actualitzar l'Usuari: \"" + user + "\", error: " + exception.getLocalizedMessage());
         }
 
         return ResponseEntity.status(HttpStatus.OK).body("S'ha actualitzat l'usuari: " + user);
@@ -66,8 +79,9 @@ public class UserService {
     public ResponseEntity<String> updateUserName(long user_id, String name) {
         try {
             userRepository.updateUserName(user_id, name);
-        } catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha pogut actualitzar l'Usuari amb id: \"" + user_id + "\", error: " + exception.getLocalizedMessage());
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha pogut actualitzar l'Usuari amb id: \""
+                    + user_id + "\", error: " + exception.getLocalizedMessage());
         }
 
         return ResponseEntity.status(HttpStatus.OK).body("S'ha actualitzat el nom de l'usuari amb id: " + user_id);
@@ -77,35 +91,37 @@ public class UserService {
     public ResponseEntity<String> deleteUser(long user_id) {
         try {
             userRepository.deleteUser(user_id);
-        } catch(Exception exception) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha pogut esborrar l'Usuari amb id: \"" + user_id + "\", error: " + exception.getLocalizedMessage());
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha pogut esborrar l'Usuari amb id: \""
+                    + user_id + "\", error: " + exception.getLocalizedMessage());
         }
 
         return ResponseEntity.status(HttpStatus.OK).body("S'ha esborrat el nom de l'usuari amb id: " + user_id);
     }
 
-    // Borrem un usuari a través de la seva user id
+    // Actualitzem un usuari per donar-li una imatge
     public ResponseEntity<String> uploadImage(long user_id, MultipartFile imageFile) throws Exception {
         User user = userRepository.getUser(user_id);
 
         System.out.println(imageFile);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No s'ha pogut trobar l'usuari amb la id: \"" + user_id + "\".");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No s'ha pogut trobar l'usuari amb la id: \"" + user_id + "\".");
         }
-        
+
         String imagePath = null;
 
         if (imageFile != null) {
-            File imageFolder = new File("src/main/resources/public/images");
+            File imageFolder = new File("src/main/resources/private/images");
 
             if (!imageFolder.exists()) {
                 imageFolder.mkdirs();
             }
 
-            imagePath = "src/main/resources/public/images/" + user.getId() + ".png";
+            imagePath = "src/main/resources/private/images/" + user.getId() + ".png";
 
-            File image = new File("src/main/resources/public/images/" + user.getId() + ".png");
+            File image = new File("src/main/resources/private/images/" + user.getId() + ".png");
 
             try (OutputStream outputStream = new FileOutputStream(image)) {
                 outputStream.write(imageFile.getBytes());
@@ -116,6 +132,53 @@ public class UserService {
 
         updateUser(user_id, user);
 
-        return ResponseEntity.status(HttpStatus.OK).body("S'ha pujat la foto de l'usuari amb id: " + user_id + " al path: " + imagePath);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body("S'ha pujat la foto de l'usuari amb id: " + user_id + " al path: " + imagePath);
     }
+
+    // Carregem multiples usuaris a través d'un csv
+    public ResponseEntity<String> bulkLoadUsers(@RequestParam MultipartFile csvFile) throws Exception {
+
+        if (csvFile == null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha enviat cap fitxer CSV");
+        }
+
+        File regularCSVFile = new File("src/main/resources/Holder.csv");
+
+        ArrayList<User> users = new ArrayList<User>();
+
+        try (OutputStream outputStream = new FileOutputStream(regularCSVFile)) {
+            outputStream.write(csvFile.getBytes());
+        }
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(regularCSVFile))) {
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null) {
+                ArrayList<String> values = new ArrayList<String>(Arrays.asList(line.split(",")));
+
+                User user = new User();
+
+                user.setName(values.size() >= 1 ? values.get(0) : null);
+                user.setDescription(values.size() >= 2 ? values.get(1) : null);
+                user.setEmail(values.size() >= 3 ? values.get(2) : null);
+                user.setPassword(values.size() >= 4 ? values.get(3) : null);
+
+                users.add(user);
+            }
+        }
+
+        for (User user: users) {
+            ResponseEntity<String> responseEntity = createUser(user);
+
+            System.out.println(responseEntity.getStatusCode());
+
+            if (responseEntity.getStatusCode() != HttpStatus.CONFLICT) {continue;}
+
+            return responseEntity;
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body("S'han introduit tots els usuaris del CSV.");
+    }
+
 }

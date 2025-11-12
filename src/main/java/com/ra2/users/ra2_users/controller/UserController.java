@@ -66,4 +66,10 @@ public class UserController {
     public ResponseEntity<String> uploadImage(@PathVariable long user_id, @RequestParam MultipartFile imageFile) throws Exception {
         return userService.uploadImage(user_id, imageFile);
     }
+
+    // Endpoint per pujar usuaris en massa a través d'un csv
+    @PostMapping("/users/upload-csv")
+    public ResponseEntity<String> bulkLoadUsers(@RequestParam MultipartFile csvFile) throws Exception {
+        return userService.bulkLoadUsers(csvFile);
+    }
 }
