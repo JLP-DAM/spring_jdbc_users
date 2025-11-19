@@ -69,7 +69,13 @@ public class UserController {
 
     // Endpoint per pujar usuaris en massa a través d'un csv
     @PostMapping("/users/upload-csv")
-    public ResponseEntity<String> bulkLoadUsers(@RequestParam MultipartFile csvFile) throws Exception {
-        return userService.bulkLoadUsers(csvFile);
+    public ResponseEntity<String> bulkLoadUsersCSV(@RequestParam MultipartFile csvFile) throws Exception {
+        return userService.bulkLoadUsersCSV(csvFile);
+    }
+
+     // Endpoint per pujar usuaris en massa a través d'un csv
+    @PostMapping("/users/upload-json")
+    public ResponseEntity<String> bulkLoadUsersJSON(@RequestParam MultipartFile jsonFile) throws Exception {
+        return userService.bulkLoadUsersJSON(jsonFile);
     }
 }

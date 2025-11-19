@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.ra2.users.ra2_users.model.User;
 import com.ra2.users.ra2_users.repository.UserRepository;
 
@@ -28,6 +31,10 @@ import com.ra2.users.ra2_users.repository.UserRepository;
 public class UserService {
     @Autowired
     private UserRepository userRepository;
+
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     // Creador d'usuaris
     public ResponseEntity<String> createUser(User user) {
@@ -103,8 +110,6 @@ public class UserService {
     public ResponseEntity<String> uploadImage(long user_id, MultipartFile imageFile) throws Exception {
         User user = userRepository.getUser(user_id);
 
-        System.out.println(imageFile);
-
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("No s'ha pogut trobar l'usuari amb la id: \"" + user_id + "\".");
@@ -137,13 +142,23 @@ public class UserService {
     }
 
     // Carregem multiples usuaris a través d'un csv
-    public ResponseEntity<String> bulkLoadUsers(@RequestParam MultipartFile csvFile) throws Exception {
+    public ResponseEntity<String> bulkLoadUsersCSV(@RequestParam MultipartFile csvFile) throws Exception {
 
         if (csvFile == null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha enviat cap fitxer CSV");
         }
 
-        File regularCSVFile = new File("src/main/resources/Holder.csv");
+        if (csvFile.getOriginalFilename().indexOf(".csv") == -1) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("El fitxer enviat no es CSV");
+        }
+
+        File csvFolder = new File("src/main/resources/csv_processed");
+
+        if (!csvFolder.exists()) {
+            csvFolder.mkdirs();
+        }
+
+        File regularCSVFile = new File("src/main/resources/csv_processed/" + csvFile.getOriginalFilename());
 
         ArrayList<User> users = new ArrayList<User>();
 
@@ -166,12 +181,12 @@ public class UserService {
 
                 users.add(user);
             }
+        } catch(Exception exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Error llegint el CSV " + exception.getLocalizedMessage());
         }
 
         for (User user: users) {
             ResponseEntity<String> responseEntity = createUser(user);
-
-            System.out.println(responseEntity.getStatusCode());
 
             if (responseEntity.getStatusCode() != HttpStatus.CONFLICT) {continue;}
 
@@ -181,4 +196,40 @@ public class UserService {
         return ResponseEntity.status(HttpStatus.OK).body("S'han introduit tots els usuaris del CSV.");
     }
 
+    // Carregem multiples usuaris a través d'un csv
+    public ResponseEntity<String> bulkLoadUsersJSON(@RequestParam MultipartFile jsonFile) throws Exception {
+        if (jsonFile == null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("No s'ha enviat cap fitxer JSON");
+        }
+
+        if (jsonFile.getOriginalFilename().indexOf(".json") == -1) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("El fitxer enviat no es JSON");
+        }
+
+        File jsonFolder = new File("src/main/resources/json_processed");
+
+        if (!jsonFolder.exists()) {
+            jsonFolder.mkdirs();
+        }
+
+        File regularjsonFile = new File("src/main/resources/json_processed/" + jsonFile.getOriginalFilename());
+
+        try (OutputStream outputStream = new FileOutputStream(regularjsonFile)) {
+            outputStream.write(jsonFile.getBytes());
+        }
+
+        JsonNode users = objectMapper.readTree(regularjsonFile).path("data").path("users");
+
+        for (JsonNode jsonUser: users) {
+            User user = objectMapper.treeToValue(jsonUser, User.class);
+
+            ResponseEntity<String> responseEntity = createUser(user);
+
+            if (responseEntity.getStatusCode() != HttpStatus.CONFLICT) {continue;}
+
+            return responseEntity;
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body("S'han introduit tots els usuaris del json.");
+    }
 }
